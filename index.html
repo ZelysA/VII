@@ -172,11 +172,25 @@
         }
 
         .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 20px;
         }
+        
+        .button-row-1, .button-row-2 {
+            display: grid;
+            gap: 10px;
+        }
+
+        .button-row-1 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .button-row-2 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
         .timer-controls {
             display: grid;
             gap: 10px;
@@ -214,7 +228,10 @@
         .song-btn { background-color: #3A4D8F; color: white; }
         .song-btn:hover { background-color: #2C3A6B; }
 
-        .stop-btn { background-color: #D9534F; color: white; grid-column: span 3; }
+        .song-btn-green { background-color: #4CAF50; color: white; }
+        .song-btn-green:hover { background-color: #45a049; }
+
+        .stop-btn { background-color: #D9534F; color: white; }
         .stop-btn:hover { background-color: #C9302C; }
 
         .timer-button { background-color: #607D8B; color: white; }
@@ -250,15 +267,7 @@
                 max-width: 350px;
                 padding: 20px;
             }
-
-            .controls {
-                grid-template-columns: 1fr 1fr 1fr;
-            }
-
-            .stop-btn {
-                grid-column: span 3;
-            }
-
+            
             .status-text {
                 font-size: 1em;
             }
@@ -299,12 +308,19 @@
             </div>
 
             <div class="controls">
-                <button id="song1-btn" class="button-38 song-btn">เพลงที่ 1</button>
-                <button id="song2-btn" class="button-38 song-btn">เพลงที่ 2</button>
-                <button id="song3-btn" class="button-38 song-btn">เพลงที่ 3</button>
+                <div class="button-row-1">
+                    <button id="song1-btn" class="button-38 song-btn"></button>
+                    <button id="song2-btn" class="button-38 song-btn"></button>
+                    <button id="song3-btn" class="button-38 song-btn"></button>
+                </div>
+                <div class="button-row-2">
+                    <button id="song4-btn" class="button-38 song-btn-green"></button>
+                    <button id="song5-btn" class="button-38 song-btn-green"></button>
+                    <button id="song6-btn" class="button-38 song-btn-green"></button>
+                    <button id="song7-btn" class="button-38 song-btn-green"></button>
+                </div>
                 <button id="stop-btn" class="button-38 stop-btn">หยุด / เล่นต่อ</button>
             </div>
-            
             <div class="timer-controls">
                 <button id="timer-btn" class="button-38 timer-button">จับเวลา 30 วินาที</button>
                 <button id="cancel-timer-btn" class="button-38 cancel-timer-btn hidden">ยกเลิกการจับเวลา</button>
@@ -316,13 +332,18 @@
     <audio id="main-audio"></audio>
     <audio id="whistle-audio" src="music/Wit.mp3" preload="auto"></audio>
     <audio id="tick-audio" loop src="music/30s.mp3" preload="auto"></audio>
+    <audio id="times-up-audio" src="music/fart.mp3" preload="auto"></audio>
 
 
     <script>
         const songs = [
-            { name: 'เพลงที่ 1', src: 'music/song1.mp3' },
-            { name: 'เพลงที่ 2', src: 'music/song2.mp3' },
-            { name: 'เพลงที่ 3', src: 'music/song3.mp3' }
+            { name: 'ชื่อเพลงที่ 1', src: 'music/song1.mp3' },
+            { name: 'ชื่อเพลงที่ 2', src: 'music/song2.mp3' },
+            { name: 'ชื่อเพลงที่ 3', src: 'music/song3.mp3' },
+            { name: 'ชื่อเพลงที่ 4', src: 'music/song4.mp3' },
+            { name: 'ชื่อเพลงที่ 5', src: 'music/song5.mp3' },
+            { name: 'ชื่อเพลงที่ 6', src: 'music/song6.mp3' },
+            { name: 'ชื่อเพลงที่ 7', src: 'music/song7.mp3' }
         ];
 
         const statusDisplay = document.getElementById('status');
@@ -330,13 +351,27 @@
         const mainAudio = document.getElementById('main-audio');
         const whistleAudio = document.getElementById('whistle-audio');
         const tickAudio = document.getElementById('tick-audio');
-        const song1Btn = document.getElementById('song1-btn');
-        const song2Btn = document.getElementById('song2-btn');
-        const song3Btn = document.getElementById('song3-btn');
         const stopBtn = document.getElementById('stop-btn');
         const timerBtn = document.getElementById('timer-btn');
         const cancelTimerBtn = document.getElementById('cancel-timer-btn');
         const resetBtn = document.getElementById('reset-btn');
+        const timesUpAudio = document.getElementById('times-up-audio'); 
+
+        const song1Btn = document.getElementById('song1-btn');
+        const song2Btn = document.getElementById('song2-btn');
+        const song3Btn = document.getElementById('song3-btn');
+        const song4Btn = document.getElementById('song4-btn');
+        const song5Btn = document.getElementById('song5-btn');
+        const song6Btn = document.getElementById('song6-btn');
+        const song7Btn = document.getElementById('song7-btn');
+
+        song1Btn.textContent = songs[0].name;
+        song2Btn.textContent = songs[1].name;
+        song3Btn.textContent = songs[2].name;
+        song4Btn.textContent = songs[3].name;
+        song5Btn.textContent = songs[4].name;
+        song6Btn.textContent = songs[5].name;
+        song7Btn.textContent = songs[6].name;
 
         const progressContainer = document.getElementById('progress-container');
         const seekBar = document.getElementById('seek-bar');
@@ -391,6 +426,14 @@
         }
         
         function startTimer() {
+            // --- 📌 จุดที่แก้ไข ---
+            // "เตรียม" เสียงเอฟเฟกต์โดยการเล่นแล้วหยุดทันที
+            // เพื่อให้บราวเซอร์อนุญาตให้เล่นเสียงในอีก 30 วินาทีข้างหน้า
+            timesUpAudio.play();
+            timesUpAudio.pause();
+            timesUpAudio.currentTime = 0;
+            // --- จบจุดที่แก้ไข ---
+
             stopAndResetTimer();
             let timeLeft = 30;
             timerDisplay.textContent = `เวลาที่เหลือ: ${timeLeft} วินาที`;
@@ -404,6 +447,10 @@
                 if (timeLeft <= 0) {
                     stopAndResetTimer();
                     timerDisplay.textContent = 'หมดเวลา!';
+
+                    timesUpAudio.currentTime = 0;
+                    timesUpAudio.play();
+
                     setTimeout(() => { if (!timerInterval) timerDisplay.textContent = ''; }, 2000);
                 }
             }, 1000);
@@ -426,6 +473,11 @@
         song1Btn.addEventListener('click', () => playSong(0));
         song2Btn.addEventListener('click', () => playSong(1));
         song3Btn.addEventListener('click', () => playSong(2));
+        song4Btn.addEventListener('click', () => playSong(3));
+        song5Btn.addEventListener('click', () => playSong(4));
+        song6Btn.addEventListener('click', () => playSong(5));
+        song7Btn.addEventListener('click', () => playSong(6));
+        
         stopBtn.addEventListener('click', handleStopClick);
         timerBtn.addEventListener('click', startTimer);
         cancelTimerBtn.addEventListener('click', stopAndResetTimer);
